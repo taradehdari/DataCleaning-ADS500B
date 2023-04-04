@@ -1,0 +1,59 @@
+---
+title: "bank_marketing"
+output: html_document
+date: "2023-04-03"
+---
+
+```{r setup, include=FALSE}
+library (ggplot2)
+library(dplyr)
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The dataset was collected from the UCI Machine Learning Repository covering the period from May 2008 to November 2010. The dataset pertains to the direct marketing campaigns conducted by a Portuguese banking institution. These campaigns involved making phone calls to potential clients to promote a bank term deposit product. In some cases, multiple contacts with the same client were necessary to determine if they are interested in subscribing to the deposit product or not.
+
+The bank_marketing.csv file is imported using the read.csv() function where the fields are separated by the semicolon (;). This function reads the data and stores it in a clientdata data frame. The dataset has 45211 rows and 17 columns. 
+
+The dataset contains a mix of numerical and categorical variables. The “age”, “balance”, “day”, “duration”, “campaign”, “pdays”, and “previous” variables are numerical variables. On the other hand, the variables “job”, “marital”, “education”, “contact”, “month”, and “poutcome” are categorical. Moreover, the dataset contains binary variables which include “default”, “housing”, “loan”, and “deposit” fields. 
+
+```{r}
+clientdata <- read.csv("bank_marketing.csv",header=T,sep=";")
+dim(clientdata)
+str(clientdata)
+```
+
+The dataset contains missing values in the Age (1339), default (1306), and contact (1383) fields. 
+
+Looking at the descriptive statistics, we observe that the maximum values for numerical columns are too skewed, so the mean will not be a meaningful replacement for missing values as the data is not normally distributed. Hence replacing the missing values using the median.
+
+Default and contact columns are categorical and not numerical. Replacing the missing value with the mode would not be appropriate in this case. Hence, we can remove the records with the missing values in both columns.
+
+```{r}
+head(clientdata)
+colSums(is.na(clientdata) | clientdata == "")
+summary(clientdata)
+#Filtering rows which has non missing values in default and contact columns
+clientdata <- clientdata %>% filter(default != "" & contact != "")
+#Replace missing values in the "age" column with the median age of all non missing values in the same column
+clientdata <- clientdata %>% mutate(across(age, ~replace_na(., median(., na.rm=TRUE))))
+colSums(is.na(clientdata) | clientdata == "")
+```
+
+```{r}
+ggplot(data = clientdata, aes(x = "", y = age)) +
+  geom_boxplot() + labs(title = "Boxplot of Age in Bank Marketing Dataset", x = "Age", y = "Values")
+ggplot(data = clientdata, aes(x = "", y = previous)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Previous in Bank Marketing Dataset", x = "previous", y = "No of contacts")
+```
+
+```{r}
+#Treating Outliers
+clientdata <- clientdata %>% filter(previous != max(previous))
+ggplot(data = clientdata, aes(x = "", y = previous)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Previous variable in Bank Marketing Dataset", x = "previous", y = "No of contacts")
+summary(clientdata$previous)
+```
+
