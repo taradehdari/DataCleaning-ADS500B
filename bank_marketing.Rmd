@@ -19,9 +19,13 @@ The dataset contains a mix of numerical and categorical variables. The “age”
 
 ```{r}
 clientdata <- read.csv("bank_marketing.csv",header=T,sep=";")
+#Returns no of rows and columns
 dim(clientdata)
+#Returns the data type of the columns
 str(clientdata)
 ```
+
+##Handling Missing values
 
 The dataset contains missing values in the Age (1339), default (1306), and contact (1383) fields. 
 
@@ -39,21 +43,53 @@ clientdata <- clientdata %>% filter(default != "" & contact != "")
 clientdata <- clientdata %>% mutate(across(age, ~replace_na(., median(., na.rm=TRUE))))
 colSums(is.na(clientdata) | clientdata == "")
 ```
+##Identifying and Treating Outliers
+
+We have created box plots to identify the outliers for the numerical variables- Age, Balance, Day, Duration, Campaign, Pdays, and Previous. In general, removing outliers from a large dataset is a common practice in data preprocessing and analysis, especially when the outliers are believed to be due to errors or measurement issues. 
+
+Age, Balance, Duration, Campaign, and Pdays – Outliers in these variables are not removed because removing them may provide a loss of information and distortion of the distribution of the data.
+
+Day – No outliers present.
+
+Previous – Holds the number of contacts performed before this campaign for the client. The value ranges between 0 and 58, barring one value to be 275. This value is assumed to be an outlier and is removed.
+
 
 ```{r}
-ggplot(data = clientdata, aes(x = "", y = age)) +
-  geom_boxplot() + labs(title = "Boxplot of Age in Bank Marketing Dataset", x = "Age", y = "Values")
-ggplot(data = clientdata, aes(x = "", y = previous)) +
-  geom_boxplot() +
-  labs(title = "Boxplot of Previous in Bank Marketing Dataset", x = "previous", y = "No of contacts")
+ggplot(data = clientdata, aes(x = "", y = age)) + geom_boxplot() + 
+  labs(title = "Boxplot of Age in Bank Marketing Dataset", x = "Age", y = "Values")
+ggplot(data = clientdata, aes(x = "", y = balance)) + geom_boxplot() + 
+  labs(title = "Boxplot of Balance in Bank Marketing Dataset", x = "Balance", y = "Avg yearly balance in Euros")
+ggplot(data = clientdata, aes(x = "", y = day)) + geom_boxplot() + 
+  labs(title = "Boxplot of Day in Bank Marketing Dataset", x = "Day", y = "Last contact day")
+ggplot(data = clientdata, aes(x = "", y = duration)) + geom_boxplot() + 
+  labs(title = "Boxplot of Duration in Bank Marketing Dataset", x = "Duration", y = "Duration in seconds")
+ggplot(data = clientdata, aes(x = "", y = campaign)) + geom_boxplot() + 
+  labs(title = "Boxplot of Campaign in Bank Marketing Dataset", x = "Campaign", y = "No of contacts during this campaign")
+ggplot(data = clientdata, aes(x = "", y = pdays)) + geom_boxplot() + 
+  labs(title = "Boxplot of Pdays in Bank Marketing Dataset", x = "Pdays", y = "No of days passed since last contact")
+ggplot(data = clientdata, aes(x = "", y = previous)) + geom_boxplot() + 
+  labs(title = "Boxplot of Previous in Bank Marketing Dataset", x = "previous", y = "No of contacts before this campaign")
 ```
 
 ```{r}
 #Treating Outliers
 clientdata <- clientdata %>% filter(previous != max(previous))
-ggplot(data = clientdata, aes(x = "", y = previous)) +
-  geom_boxplot() +
+#Checking the box plot of Previous variable after removing one outlier
+ggplot(data = clientdata, aes(x = "", y = previous)) + geom_boxplot() +
   labs(title = "Boxplot of Previous variable in Bank Marketing Dataset", x = "previous", y = "No of contacts")
 summary(clientdata$previous)
 ```
+## Data Transformation
+
+## Data Aggregation
+
+```{r}
+#Aggregating the data by job type
+clientdata %>% group_by(job) %>% summarize(total_deposits = sum(deposit == 'yes')) %>% arrange(desc(total_deposits))
+```
+The above table shows the number of term deposits subscribed by the clients based on their job type. Based on the data provided, it appears that clients in management roles have subscribed to the highest number of term deposits, with a total of 1232 deposits, followed by technicians with 795 deposits and blue-collar workers with 670 deposits.
+
+Clients in the services, student, unemployed, self-employed, and entrepreneur categories have subscribed to fewer term deposits, with the numbers ranging from 115 to 344.
+
+Overall, it seems that clients in higher-level job roles, such as management and technician, are more likely to subscribe to term deposits than those in lower-level roles such as students or self-employed individuals. This information can help the banks to identify potential areas for improvement in their marketing campaigns to reach clients in job roles that have shown a lower tendency to subscribe to term deposits.
 
