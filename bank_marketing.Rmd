@@ -8,6 +8,7 @@ date: "2023-04-03"
 library (ggplot2)
 library(dplyr)
 library(tidyverse)
+library(scales)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -23,6 +24,7 @@ clientdata <- read.csv("bank_marketing.csv",header=T,sep=";")
 dim(clientdata)
 #Returns the data type of the columns
 str(clientdata)
+View(clientdata)
 ```
 
 ##Handling Missing values
@@ -34,7 +36,6 @@ Looking at the descriptive statistics, we observe that the maximum values for nu
 Default and contact columns are categorical and not numerical. Replacing the missing value with the mode would not be appropriate in this case. Hence, we can remove the records with the missing values in both columns.
 
 ```{r}
-head(clientdata)
 colSums(is.na(clientdata) | clientdata == "")
 summary(clientdata)
 #Filtering rows which has non missing values in default and contact columns
@@ -92,4 +93,25 @@ The above table shows the number of term deposits subscribed by the clients base
 Clients in the services, student, unemployed, self-employed, and entrepreneur categories have subscribed to fewer term deposits, with the numbers ranging from 115 to 344.
 
 Overall, it seems that clients in higher-level job roles, such as management and technician, are more likely to subscribe to term deposits than those in lower-level roles such as students or self-employed individuals. This information can help the banks to identify potential areas for improvement in their marketing campaigns to reach clients in job roles that have shown a lower tendency to subscribe to term deposits.
+
+```{r}
+#Aggregating the data by month
+clientdata %>% group_by(month) %>% summarize(total_deposits = sum(deposit == 'yes')) %>% arrange(desc(total_deposits))
+clientdata %>% group_by(month) %>% summarize(total_contacts = sum(campaign)) %>% arrange(desc(total_contacts))
+```
+
+The output shows the total number of deposits subscribed for each month in the marketing campaign. Looking at the data, we can see that May had the highest number of deposits, with a total of 880. This suggests that the marketing campaign was particularly successful in May or that customers tend to have more income or savings during this time of year.  
+
+The second-highest number of deposits were subscribed in August, with a total of 658 deposits followed by July, with a total of 590 deposits. This indicates that the campaign was also successful in these months.
+
+## Data Normalization
+
+```{r}
+#Min-Max Normalization using xRescale function to scale the age, balance and duration
+clientdata <- clientdata %>% mutate(age = round(rescale(age, to=c(0,1)),3),
+                      balance = round(rescale(balance, to=c(0,1)),3),
+                      duration = round(rescale(duration, to=c(0,1)),3))
+View(clientdata)
+#Summary(clientdata)
+```
 
