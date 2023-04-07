@@ -1,0 +1,8 @@
+## Data Reduction
+
+Removing the day and month variables from the dataset as they only indicate the timing of the last contact and are not likely to have a significant impact on the outcome variable.
+
+```{r}
+#Remove day and month columns
+clientdata <- clientdata %>% select(-one_of('day', 'month')) 
+View(clientdata)
