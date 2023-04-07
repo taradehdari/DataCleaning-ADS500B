@@ -104,6 +104,8 @@ The output shows the total number of deposits subscribed for each month in the m
 
 The second-highest number of deposits were subscribed in August, with a total of 658 deposits followed by July, with a total of 590 deposits. This indicates that the campaign was also successful in these months.
 
+The scale of age and duration is much smaller than the scale of balance. In this case, normalizing these variables to a common range allows comparing variables that are measured on different scales or units.
+
 ## Data Normalization
 
 ```{r}
@@ -114,4 +116,383 @@ clientdata <- clientdata %>% mutate(age = round(rescale(age, to=c(0,1)),3),
 View(clientdata)
 #Summary(clientdata)
 ```
+
+In this code we are looking at the correlation between the numerical values. The first line of code creates a variable called cols that includes all of the numerical columns in the data set client data. The next line of code creates the correlation matrix with the numeric columns and the third line of code prints out the correlation matrix. Through the output we can see that none of the numeric values show any high correlation. 
+
+```{r}
+#2c diagnose correlations between variables and determine indpendent and dependent variables
+#correlation matrix
+cols <- c("age", "balance", "duration","campaign", "pdays", "previous", "day")
+
+corr_matrix <- cor(clientdata[, cols])
+print(corr_matrix)
+
+```
+For numerical values the mean, median, and mode were calculated to look at the measures of centrality. The measures of centrality provides information about the skewness of the dataset. EXPLAIN SKEWNESS BASED OFF NORMALIZATION.  
+```{r}
+#2b: provides measures of centrality and distribution with visualizations
+
+#numerical measures of centrality --> mean, median, mode
+#measures of centrality of age
+mean_age <- round(mean(clientdata$age),2)
+median_age <- round(median(clientdata$age),2)
+mode_age <- clientdata %>% 
+  count(age) %>% 
+  filter(n == max(n)) %>% 
+  pull(age)
+
+print(paste("The mean of age is", mean_age))
+print(paste("The median of age is", median_age))
+print(paste("The mode of age is", mode_age))
+
+#measures of centrality of balance
+mean_balance <- round(mean(clientdata$balance),2)
+median_balance <- round(median(clientdata$balance),2)
+mode_balance <- clientdata %>% 
+  count(balance) %>% 
+  filter(n == max(n)) %>% 
+  pull(balance)
+
+print(paste("The mean of balance is", mean_balance))
+print(paste("The median of balance is", median_balance))
+print(paste("The mode of balance is", mode_balance))
+
+#measures of centrality of day
+mean_day <- round(mean(clientdata$day),2)
+median_day <- round(median(clientdata$day),2)
+mode_day <- clientdata %>% 
+  count(day) %>% 
+  filter(n == max(n)) %>% 
+  pull(day)
+
+print(paste("The mean of day is", mean_day))
+print(paste("The median of day is", median_day))
+print(paste("The mode of day is", mode_day))
+
+#measures of centrality of duration
+mean_duration <- round(mean(clientdata$duration),2)
+median_duration <- round(median(clientdata$duration),2)
+mode_duration <- clientdata %>% 
+  count(duration) %>% 
+  filter(n == max(n)) %>% 
+  pull(duration)
+
+print(paste("The mean of duration is", mean_duration))
+print(paste("The median of duration is", median_duration))
+print(paste("The mode of duration is", mode_duration))
+
+#measures of centrality of campaign
+mean_campaign <- round(mean(clientdata$campaign),2)
+median_campaign <- round(median(clientdata$campaign),2)
+mode_campaign <- clientdata %>% 
+  count(campaign) %>% 
+  filter(n == max(n)) %>% 
+  pull(campaign)
+
+print(paste("The mean of campaign is", mean_campaign))
+print(paste("The median of campaign is", median_campaign))
+print(paste("The mode of campaign is", mode_campaign))
+
+#measures of centrality of pdays
+mean_pdays <- round(mean(clientdata$pdays),2)
+median_pdays <- round(median(clientdata$pdays),2)
+mode_pdays <- clientdata %>% 
+  count(pdays) %>% 
+  filter(n == max(n)) %>% 
+  pull(pdays)
+
+print(paste("The mean of pdays is", mean_pdays))
+print(paste("The median of pdays is", median_pdays))
+print(paste("The mode of pdays is", mode_pdays))
+
+#measures of centrality of previous
+mean_previous <- round(mean(clientdata$previous),2)
+median_previous <- round(median(clientdata$previous),2)
+mode_previous <- clientdata %>% 
+  count(previous) %>% 
+  filter(n == max(n)) %>% 
+  pull(previous)
+
+print(paste("The mean of previous is", mean_previous))
+print(paste("The median of previous is", median_previous))
+print(paste("The mode of previous is", mode_previous))
+```
+For categorical variables mode was calculated to observe the measures of centrality. The mode of each categorical variables shows what is most used in each categorical variable. So there are more blue-collar jobs observed in the data set. There are more married couples in this data set. There are more people who completed secondary education than other education levels. The primary mode of contact is cellular. Majority of people were last contacted in May, and majority of the outcome of the previous marketing campaign is unknown.
+
+```{r}
+#categorical measures of centrality --> mode
+#mode of job
+mode_job <- clientdata %>% 
+  count(job) %>% 
+  filter(n == max(n)) %>% 
+  pull(job)
+
+#mode of marital
+mode_marital <- clientdata %>% 
+  count(marital) %>% 
+  filter(n == max(n)) %>% 
+  pull(marital)
+
+#mode of education
+mode_education <- clientdata %>% 
+  count(education) %>% 
+  filter(n == max(n)) %>% 
+  pull(education)
+
+#mode of contact
+mode_contact <- clientdata %>% 
+  count(contact) %>% 
+  filter(n == max(n)) %>% 
+  pull(contact)
+
+#mode of month
+mode_month <- clientdata %>% 
+  count(month) %>% 
+  filter(n == max(n)) %>% 
+  pull(month)
+
+#mode of poutcome
+mode_poutcome <- clientdata %>% 
+  count(poutcome) %>% 
+  filter(n == max(n)) %>% 
+  pull(poutcome)
+
+print(paste("The mode of jobs is", mode_job))
+print(paste("The mode of marital is", mode_marital))
+print(paste("The mode of education is", mode_education))
+print(paste("The mode of contact is", mode_contact))
+print(paste("The mode of month is", mode_month))
+print(paste("The mode of poutcome is", mode_poutcome))
+```
+For the binary measures of centrality the frequency tables were printed. There are more no in default, loan and deposit than yes, and there are more yes in housing than no. 
+```{r}
+#binary measures of centrality --> frequency tables 
+# Create frequency tables of the binary columns
+default_table <- table(clientdata$default)
+housing_table <- table(clientdata$housing)
+loan_table <- table(clientdata$loan)
+deposit_table <- table(clientdata$deposit)
+
+#print frequency tables
+print("The frequency table for default is:")
+print(default_table)
+
+print("The frequency table for housing is:")
+print(housing_table)
+
+print("The frequency table for loan is:")
+print(loan_table)
+
+print("The frequency table for deposit is:")
+print(deposit_table)
+
+
+```
+Measures of distribution provide information about the spread of the dataset.
+
+```{r}
+#getting measures of distribution for numerical variables--> range, variance, standard deviation, interquartile range
+#measures of distribution of age
+var_age <- round(var(clientdata$age),2)
+sd_age <- round(sd(clientdata$age),2)
+IQR_age <- round(IQR(clientdata$age),2)
+summary(clientdata$age)
+q1_age <- summary(clientdata$age)[2]
+q3_age <- summary(clientdata$age)[5]
+range_age <- summary(clientdata$age)[6] - summary(clientdata$age)[1]
+
+print(paste("The range of age is", range_age))
+print(paste("The variance of age is", var_age))
+print(paste("The standard deviation of age is", sd_age))
+print(paste("The IQR of age is", IQR_age))
+print(paste("The first quartile of age is", q1_age))
+print(paste("The third quaratile of age is", q3_age))
+```
+
+```{r}
+#measures of distribution of balance
+var_balance <- round(var(clientdata$balance),2)
+sd_balance <- round(sd(clientdata$balance),2)
+IQR_balance <- round(IQR(clientdata$balance),2)
+summary(clientdata$balance)
+q1_balance <- summary(clientdata$balance)[2]
+q3_balance <- summary(clientdata$balance)[5]
+range_balance <- summary(clientdata$balance)[6] - summary(clientdata$balance)[1]
+
+print(paste("The range of balance is", range_balance))
+print(paste("The variance of balance is", var_balance))
+print(paste("The standard deviation of balance is", sd_balance))
+print(paste("The IQR of balance is", IQR_balance))
+print(paste("The first quartile of balance is", q1_balance))
+print(paste("The third quaratile of balance is", q3_balance))
+
+```
+```{r}
+#measures of distribution of duration
+var_duration <- round(var(clientdata$duration),2)
+sd_duration <- round(sd(clientdata$duration),2)
+IQR_duration <- round(IQR(clientdata$duration),2)
+summary(clientdata$duration)
+q1_duration <- summary(clientdata$duration)[2]
+q3_duration <- summary(clientdata$duration)[5]
+range_duration <- summary(clientdata$duration)[6] - summary(clientdata$duration)[1]
+
+print(paste("The range of duration is", range_duration))
+print(paste("The variance of duration is", var_duration))
+print(paste("The standard deviation of duration is", sd_duration))
+print(paste("The IQR of duration is", IQR_duration))
+print(paste("The first quartile of duration is", q1_duration))
+print(paste("The third quaratile of duration is", q3_duration))
+```
+```{r}
+#measures of distribution of campaign
+var_campaign <- round(var(clientdata$campaign),2)
+sd_campaign <- round(sd(clientdata$campaign),2)
+IQR_campaign <- round(IQR(clientdata$campaign),2)
+summary(clientdata$campaign)
+q1_campaign <- summary(clientdata$campaign)[2]
+q3_campaign <- summary(clientdata$campaign)[5]
+range_campaign <- summary(clientdata$campaign)[6] - summary(clientdata$campaign)[1]
+
+print(paste("The range of campaign is", range_campaign))
+print(paste("The variance of campaign is", var_campaign))
+print(paste("The standard deviation of campaign is", sd_campaign))
+print(paste("The IQR of campaign is", IQR_campaign))
+print(paste("The first quartile of campaign is", q1_campaign))
+print(paste("The third quaratile of campaign is", q3_campaign))
+```
+
+```{r}
+#previous", "day"
+#measures of distribution of pdays
+var_pdays <- round(var(clientdata$pdays),2)
+sd_pdays <- round(sd(clientdata$pdays),2)
+IQR_pdays <- round(IQR(clientdata$pdays),2)
+summary(clientdata$pdays)
+q1_pdays <- summary(clientdata$pdays)[2]
+q3_pdays <- summary(clientdata$pdays)[5]
+range_pdays <- summary(clientdata$pdays)[6] - summary(clientdata$pdays)[1]
+
+print(paste("The range of pdays is", range_pdays))
+print(paste("The variance of pdays is", var_pdays))
+print(paste("The standard deviation of pdays is", sd_pdays))
+print(paste("The IQR of pdays is", IQR_pdays))
+print(paste("The first quartile of pdays is", q1_pdays))
+print(paste("The third quaratile of pdays is", q3_pdays))
+```
+```{r}
+#measures of distribution of previous
+var_previous <- round(var(clientdata$previous),2)
+sd_previous <- round(sd(clientdata$previous),2)
+IQR_previous <- round(IQR(clientdata$previous),2)
+summary(clientdata$previous)
+q1_previous <- summary(clientdata$previous)[2]
+q3_previous <- summary(clientdata$previous)[5]
+range_previous <- summary(clientdata$previous)[6] - summary(clientdata$previous)[1]
+
+print(paste("The range of previous is", range_previous))
+print(paste("The variance of previous is", var_previous))
+print(paste("The standard deviation of previous is", sd_previous))
+print(paste("The IQR of previous is", IQR_previous))
+print(paste("The first quartile of previous is", q1_previous))
+print(paste("The third quaratile of previous is", q3_previous))
+```
+```{r}
+#measures of distribution of day
+var_day <- round(var(clientdata$day),2)
+sd_day <- round(sd(clientdata$day),2)
+IQR_day <- round(IQR(clientdata$day),2)
+summary(clientdata$day)
+q1_day <- summary(clientdata$day)[2]
+q3_day <- summary(clientdata$day)[5]
+range_day <- summary(clientdata$day)[6] - summary(clientdata$day)[1]
+
+print(paste("The range of day is", range_day))
+print(paste("The variance of day is", var_day))
+print(paste("The standard deviation of day is", sd_day))
+print(paste("The IQR of day is", IQR_day))
+print(paste("The first quartile of day is", q1_day))
+print(paste("The third quaratile of day is", q3_day))
+```
+
+```{r}
+#measures of distribution for categorical variables --> frequency
+categorical_vars <- c("job","marital","education","contact", "month", "poutcome")
+for (var in categorical_vars){
+  freq_table <- table(clientdata[[var]])
+  print(paste("Frequency table for", var))
+  print(freq_table)
+}
+
+```
+Previous and pdays had the highest correlation out of all the data sets with a correlation of 0.5441. Duration and pdays had the lowest correlation with a correlation of -0.000885. 
+FIX THESE TO INCLUDE NORMALIZED DATA, DO HIGHEST CORRELATION AND LOWEST CORELATION (It might bet the same)
+
+```{r}
+#2d: perform exploratory analysis in combination with visualization techniques to discover patterns and feautures of interest 
+
+#scatter plots --> to view any of the correlations to show they arent correlated (maybe do most correlated and least correlated)
+
+ggplot(clientdata, aes(x = previous, y = pdays)) +
+  geom_point() +
+  labs(title = "Scatter plot of previous and pdays", x = "Previous", y = "Pdays")
+
+ggplot(clientdata, aes(x = duration, y = pdays)) +
+  geom_point() +
+  labs(title = "Scatter plot of duration and pdays", x = "Duration", y = "Pdays")
+
+```
+
+
+```{r}
+#histogram to visualize the distribution of individual variables
+
+#histogram of duration
+hist(clientdata$duration, main = "Histogram of Duration", xlab = "Duration", ylab = "Frequency")
+
+#histogram of pdays
+hist(clientdata$pdays, main = "Histogram of pdays", xlab = "Pdays", ylab = "Frequency")
+
+#histogram of days
+hist(clientdata$day, main="Histogram of days", breaks = 40, xlab= "pdays", ylab="Frequency")
+```
+
+```{r}
+ggplot(clientdata, aes(fill=deposit, y=balance, x=deposit)) + 
+    geom_bar(position="dodge", stat="identity") +
+    ggtitle("Studying 4 Outcomes of Previous Campaign vs. Deposit Made") +
+    facet_wrap(~poutcome) +
+    theme(legend.position="none") +
+    xlab("Deposit Made") +
+    ylab("Balance (€)")
+```
+
+```{r}
+#for categorical variables do bar charts
+#barchart for loan
+#create frequency table of loan variable
+loan_freq <- table(clientdata$loan)
+# create bar chart
+barplot(loan_freq, main = "Frequency of Loan Categories", xlab = "Loan Category", ylab = "Frequency")
+
+#barchart for housing
+#create frequency table of housing variable
+housing_freq <- table(clientdata$housing)
+# create bar chart
+barplot(housing_freq, main = "Frequency of Housing Categories", xlab = "Housing Category", ylab = "Frequency")
+
+#barchart for marital
+#create frequency table of marital variable
+marital_freq <- table(clientdata$marital)
+# create bar chart
+barplot(marital_freq, main = "Frequency of Marital Categories", xlab = "Marital Category", ylab = "Frequency")
+
+#barchart for job
+#create frequency table of job variable
+job_freq <- table(clientdata$job)
+# create bar chart
+barplot(job_freq, main = "Frequency of Job Categories", xlab = "Job Category", ylab = "Frequency")
+
+```
+
 
