@@ -37,16 +37,16 @@ Default and contact columns are categorical and not numerical. Replacing the mis
 
 ```{r}
 colSums(is.na(clientdata) | clientdata == "")
-summary(clientdata)
 #Filtering rows which has non missing values in default and contact columns
 clientdata <- clientdata %>% filter(default != "" & contact != "")
 #Replace missing values in the "age" column with the median age of all non missing values in the same column
 clientdata <- clientdata %>% mutate(across(age, ~replace_na(., median(., na.rm=TRUE))))
 colSums(is.na(clientdata) | clientdata == "")
+summary(clientdata)
 ```
 ##Identifying and Treating Outliers
 
-We have created box plots to identify the outliers for the numerical variables- Age, Balance, Day, Duration, Campaign, Pdays, and Previous. In general, removing outliers from a large dataset is a common practice in data preprocessing and analysis, especially when the outliers are believed to be due to errors or measurement issues. 
+Box plots were created to identify the outliers for the numerical variables- Age, Balance, Day, Duration, Campaign, Pdays, and Previous. In general, removing outliers from a large dataset is a common practice in data preprocessing and analysis, especially when the outliers are believed to be due to errors or measurement issues. 
 
 Age, Balance, Duration, Campaign, and Pdays – Outliers in these variables are not removed because removing them may provide a loss of information and distortion of the distribution of the data.
 
@@ -56,6 +56,7 @@ Previous – Holds the number of contacts performed before this campaign for the
 
 
 ```{r}
+#identifying outliers
 ggplot(data = clientdata, aes(x = "", y = age)) + geom_boxplot() + 
   labs(title = "Boxplot of Age in Bank Marketing Dataset", x = "Age", y = "Values")
 ggplot(data = clientdata, aes(x = "", y = balance)) + geom_boxplot() + 
@@ -80,7 +81,6 @@ ggplot(data = clientdata, aes(x = "", y = previous)) + geom_boxplot() +
   labs(title = "Boxplot of Previous variable in Bank Marketing Dataset", x = "previous", y = "No of contacts")
 summary(clientdata$previous)
 ```
-## Data Transformation
 
 ## Data Aggregation
 
@@ -92,7 +92,7 @@ The above table shows the number of term deposits subscribed by the clients base
 
 Clients in the services, student, unemployed, self-employed, and entrepreneur categories have subscribed to fewer term deposits, with the numbers ranging from 115 to 344.
 
-Overall, it seems that clients in higher-level job roles, such as management and technician, are more likely to subscribe to term deposits than those in lower-level roles such as students or self-employed individuals. This information can help the banks to identify potential areas for improvement in their marketing campaigns to reach clients in job roles that have shown a lower tendency to subscribe to term deposits.
+The is the total number of deposits based on job type not taking into account that there might be more management in the dataset. Later in the file we can see the normalized data and see that although there are less deposits in students the ratio of students who had a deposit and the amount of students in the data set are higher tha the other job categories. 
 
 ```{r}
 #Aggregating the data by month
@@ -104,16 +104,18 @@ The output shows the total number of deposits subscribed for each month in the m
 
 The second-highest number of deposits were subscribed in August, with a total of 658 deposits followed by July, with a total of 590 deposits. This indicates that the campaign was also successful in these months.
 
-The scale of age and duration is much smaller than the scale of balance. In this case, normalizing these variables to a common range allows comparing variables that are measured on different scales or units.
 
 ## Data Normalization
+This was an intial attempet at Normalization but upon visualizations we figured another way to normalize data that would help our vizualisations to find a perfect model. 
 
 ```{r}
+
+#The scale of age and duration is much smaller than the scale of balance. In this case, normalizing these variables to a common range allows comparing variables that are measured on different scales or units.
 #Min-Max Normalization using xRescale function to scale the age, balance and duration
-clientdata <- clientdata %>% mutate(age = round(rescale(age, to=c(0,1)),3),
-                      balance = round(rescale(balance, to=c(0,1)),3),
-                      duration = round(rescale(duration, to=c(0,1)),3))
-View(clientdata)
+#clientdata <- clientdata %>% mutate(age = round(rescale(age, to=c(0,1)),3),
+                      #balance = round(rescale(balance, to=c(0,1)),3),
+                      #duration = round(rescale(duration, to=c(0,1)),3))
+#View(clientdata)
 #Summary(clientdata)
 ```
 
@@ -123,12 +125,12 @@ In this code we are looking at the correlation between the numerical values. The
 #2c diagnose correlations between variables and determine indpendent and dependent variables
 #correlation matrix
 cols <- c("age", "balance", "duration","campaign", "pdays", "previous", "day")
-
 corr_matrix <- cor(clientdata[, cols])
-print(corr_matrix)
+options(scipen = 999) # disable scientific notation
+print(corr_matrix, digits = 6) # specify the number of decimal places
 
 ```
-For numerical values the mean, median, and mode were calculated to look at the measures of centrality. The measures of centrality provides information about the skewness of the dataset. EXPLAIN SKEWNESS BASED OFF NORMALIZATION.  
+For numerical values the mean, median, and mode were calculated to look at the measures of centrality. The measures of centrality provides information about the skewness of the dataset. EXPLAIN SKEWNESS
 ```{r}
 #2b: provides measures of centrality and distribution with visualizations
 
@@ -416,8 +418,8 @@ print(paste("The third quaratile of day is", q3_day))
 ```
 
 ```{r}
-#measures of distribution for categorical variables --> frequency
-categorical_vars <- c("job","marital","education","contact", "month", "poutcome")
+#measures of distribution for categorical and binary variables --> frequency
+categorical_vars <- c("job","marital","education","contact", "month", "poutcome", "deposit", "housing", "loan", "default")
 for (var in categorical_vars){
   freq_table <- table(clientdata[[var]])
   print(paste("Frequency table for", var))
@@ -425,13 +427,14 @@ for (var in categorical_vars){
 }
 
 ```
+##Exploratory Visualizations
+These groups of code were to look at different types of visualizations with the different data sets. 
+ 
 Previous and pdays had the highest correlation out of all the data sets with a correlation of 0.5441. Duration and pdays had the lowest correlation with a correlation of -0.000885. 
-FIX THESE TO INCLUDE NORMALIZED DATA, DO HIGHEST CORRELATION AND LOWEST CORELATION (It might bet the same)
 
 ```{r}
 #2d: perform exploratory analysis in combination with visualization techniques to discover patterns and feautures of interest 
 
-#scatter plots --> to view any of the correlations to show they arent correlated (maybe do most correlated and least correlated)
 
 ggplot(clientdata, aes(x = previous, y = pdays)) +
   geom_point() +
@@ -443,7 +446,7 @@ ggplot(clientdata, aes(x = duration, y = pdays)) +
 
 ```
 
-
+These were histograms used to visualize the distribution of individual variables, just to look at the spread and skewness. 
 ```{r}
 #histogram to visualize the distribution of individual variables
 
@@ -451,10 +454,10 @@ ggplot(clientdata, aes(x = duration, y = pdays)) +
 hist(clientdata$duration, main = "Histogram of Duration", xlab = "Duration", ylab = "Frequency")
 
 #histogram of pdays
-hist(clientdata$pdays, main = "Histogram of pdays", xlab = "Pdays", ylab = "Frequency")
+hist(clientdata$pdays, main = "Histogram of Pdays", xlab = "Pdays", ylab = "Frequency")
 
 #histogram of days
-hist(clientdata$day, main="Histogram of days", breaks = 40, xlab= "pdays", ylab="Frequency")
+hist(clientdata$day, main="Histogram of Days", breaks = 40, xlab= "Days", ylab="Frequency")
 ```
 
 ```{r}
@@ -467,32 +470,160 @@ ggplot(clientdata, aes(fill=deposit, y=balance, x=deposit)) +
     ylab("Balance (€)")
 ```
 
+
+##Normalizations and Visualizations
+Our dependent variable is deposit and in order to build a final model cluster bar charts were created to visualize what type of clients are more likely to put in deposits. First age and deposit were graphed on a cluster bar chart in order to see which age group had the highest deposits, through initial visualization it was noticed that there were more deposits in the age group that the data set had more of (30-39 year olds), in order to create bar charts that would give an understanding of the relationship between age and deposit the data had to be normalized. From the normalized bar chart it is seen that 80-95 year olds have the highest amount of deposits. To normalize the data the count of each yes or no in each age group was divided by the total number of clients in that age group. This normalized the data so that when the data set had more data for ages 30-39 it wouldn't matter. Through the scatter plot of age and balance we can see that from ages 50-59 people tend to have a higher balance but less deposits (which we can see in the barchart).  
 ```{r}
-#for categorical variables do bar charts
-#barchart for loan
-#create frequency table of loan variable
-loan_freq <- table(clientdata$loan)
-# create bar chart
-barplot(loan_freq, main = "Frequency of Loan Categories", xlab = "Loan Category", ylab = "Frequency")
+# Creating age groups
+clientdata$age_group <- cut(clientdata$age, breaks = c(15, 29, 39, 49, 59, 69, 79, 95), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-95"))
 
-#barchart for housing
-#create frequency table of housing variable
-housing_freq <- table(clientdata$housing)
-# create bar chart
-barplot(housing_freq, main = "Frequency of Housing Categories", xlab = "Housing Category", ylab = "Frequency")
+# Converting age to a factor
+clientdata$age_group <- factor(clientdata$age_group, levels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-95"))
 
-#barchart for marital
-#create frequency table of marital variable
-marital_freq <- table(clientdata$marital)
-# create bar chart
-barplot(marital_freq, main = "Frequency of Marital Categories", xlab = "Marital Category", ylab = "Frequency")
+# Save the modified data back to same file
+write.csv(clientdata, "clientdata.csv", row.names = FALSE)
 
-#barchart for job
-#create frequency table of job variable
-job_freq <- table(clientdata$job)
-# create bar chart
-barplot(job_freq, main = "Frequency of Job Categories", xlab = "Job Category", ylab = "Frequency")
+# Group data by age group and deposit, and count number of observations
+df <- clientdata %>%
+  group_by(age_group, deposit) %>%
+  summarize(count = n()) %>%
+  ungroup()
+
+# Create clustered bar chart deposit vs, age 
+ggplot(df, aes(x = age_group, y = count, fill = deposit)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Deposits by Age Group",
+       x = "Age Group",
+       y = "Count of Deposits",
+       fill = "Deposit") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+#bar chart of age group to see which age group is most in the dataset
+# Group data by age group and calculate the count
+agecount <- clientdata %>%
+  group_by(age_group) %>%
+  summarize(count = n()) %>%
+  ungroup()
+
+# Create bar chart of age groups
+ggplot(agecount, aes(x = age_group, y = count)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Clients by Age Group",
+       x = "Age Group",
+       y = "Count of Clients") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+#30-49 age is highest which is why there are more deposits in that age group to fix this we are going to normalize the counts by the total number of clients in each age group,this way the resulting count will take into account that there are different number of clients in each age group.
+# group data by age group and calculate the count (which we have above)
+#view(agecount)
+# group data by age and deposit and calculate the count
+age_depo_count <- clientdata %>%
+  group_by(age_group, deposit) %>%
+  summarize(count = n()) %>%
+  ungroup()
+
+# join two datasets by age group and deposit
+age_depo_count_norm <- left_join(age_depo_count, agecount, by = "age_group")
+#view(age_depo_count_norm)
+
+# calculate the normalized count of deposits
+age_depo_count_norm$count_norm <- age_depo_count_norm$count.x / age_depo_count_norm$count.y
+
+# clustered bar chart deposit vs, age
+ggplot(age_depo_count_norm, aes(x = age_group, y = count_norm, fill = deposit)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Deposits by Age Group",
+       x = "Age Group",
+       y = "Normalized Count of Deposits",
+       fill = "Deposit") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+
+ggplot(clientdata, aes(x = age_group, y = balance)) +
+  geom_point() +
+  labs(title = "Scatter plot of Age and Balance", x = "Age", y = "Balance")
+#deposit y dependent variable
 
 ```
+
+Using the job column in the data set, this code chunk is normalizing the number of deposits for each job title and graphing them in a clustered barchart to see what job has the majority of deposits. From the barchart students seem to deposit more than other job types. 
+```{r}
+
+# Group data by  job and deposit, and count number of observations
+jobcount <- clientdata %>%
+  group_by(job) %>%
+  summarize(count1 = n()) %>%
+  ungroup()
+#view(jobcount)
+
+# group data by job and deposit and calculate the count
+job_depo_count <- clientdata %>%
+  group_by(job, deposit) %>%
+  summarize(count = n()) %>%
+  ungroup()
+
+#view(job_depo_count)
+
+# join two datasets by job and deposit
+job_depo_count_norm <- left_join(job_depo_count, jobcount, by = c("job"))
+#view(job_depo_count_norm)
+
+# calculate the normalized count of deposits
+job_depo_count_norm$count_norm <- job_depo_count_norm$count / job_depo_count_norm$count1
+
+# clustered bar chart deposit vs, age
+ggplot(job_depo_count_norm, aes(x = job, y = count_norm, fill = deposit)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Deposits by Job",
+       x = "Job",
+       y = "Normalized Count of Deposits",
+       fill = "Deposit") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+```
+Using the Marital column in the data set, this code chunk is normalizing the number of deposits for each marital status and graphing them in a clustered barchart to see what marital status has the majority of deposits. From the barchart it seems that people who are single seem to deposit more than other job types. 
+
+```{r}
+# Group data by marital and deposit, and count number of observations
+maritalcount <- clientdata %>%
+  group_by(marital) %>%
+  summarize(count1 = n()) %>%
+  ungroup()
+#view(maritalcount)
+
+# group data by job and deposit and calculate the count
+marital_depo_count <- clientdata %>%
+  group_by(marital, deposit) %>%
+  summarize(count = n()) %>%
+  ungroup()
+
+#view(marital_depo_count)
+
+# join two datasets by job and deposit
+marital_depo_count_norm <- left_join(marital_depo_count, maritalcount, by = c("marital"))
+#view(marital_depo_count_norm)
+
+# calculate the normalized count of deposits
+marital_depo_count_norm$count_norm <- marital_depo_count_norm$count / marital_depo_count_norm$count1
+
+# clustered bar chart deposit vs, age
+ggplot(marital_depo_count_norm, aes(x = marital, y = count_norm, fill = deposit)) + 
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Deposits by Marital Status",
+       x = "Marital",
+       y = "Normalized Count of Deposits",
+       fill = "Deposit") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+```
+
+## Final Visualization and Model
+```{r}
+
+```
+
+
+
+
 
 
