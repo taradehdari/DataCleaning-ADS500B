@@ -6,3 +6,18 @@ Removing the day and month variables from the dataset as they only indicate the 
 #Remove day and month columns
 clientdata <- clientdata %>% select(-one_of('day', 'month')) 
 View(clientdata)
+
+
+## Data Normalization
+This was an intial attempet at Normalization but upon visualizations we figured another way to normalize data that would help our visualizations to find a perfect model. 
+
+```{r}
+
+#The scale of age and duration is much smaller than the scale of balance. In this case, normalizing these variables to a common range allows comparing variables that are measured on different scales or units.
+#Min-Max Normalization using xRescale function to scale the age, balance and duration
+#clientdata <- clientdata %>% mutate(age = round(rescale(age, to=c(0,1)),3),
+                      #balance = round(rescale(balance, to=c(0,1)),3),
+                      #duration = round(rescale(duration, to=c(0,1)),3))
+#View(clientdata)
+#Summary(clientdata)
+```
