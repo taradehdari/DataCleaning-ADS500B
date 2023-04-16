@@ -624,7 +624,6 @@ test <- clientdata[-trainIndex, ]
 
 #building the logistic regression model
 model <- glm(deposit ~ age + job + marital + education + default + balance + housing + loan + contact + duration + campaign + pdays + previous + poutcome, data = train, family = "binomial")
-
 summary(model)
 
 fitted.results <- predict(model, newdata=subset(test, type = 'response'))
@@ -632,7 +631,8 @@ predicted.results <- factor(ifelse(fitted.results > 0.5, "yes", "no"), levels = 
 
 predicted.results <- mean(predicted.results != test$deposit)
 
-print(paste('accuracy', 1-predicted.results))   
+print(paste('accuracy', 1-predicted.results)) 
+
 ```
 
 When creating a logistic model including all independent variables, we can see that the model breaks the variables out in to their respective labels (ex: "jobblue-collar"). This makes it very difficult to determine which variables as a whole have a large effect on the outcome of deposit, the dependent variable. As we can see the p-value for all variables are exceptionally low indicating that they would be good predictors of the dependent variable. However, the predicted accuracy of the model is [BLANK] which may indicate that the model is already overfit with all variables included.
@@ -644,7 +644,8 @@ As expected after exploratory visualizations in prior analysis, the previous out
 The below logistic regression model represents the independent variables job type and previous outcome and the ability of these variables to predict the dependent variable, deposit.
 
 ```{r}
-final_model <- glm(deposit ~ job + poutcome, data = train, family = binomial())
+final_model <- glm(deposit ~ job + housing + duration  + campaign + poutcome, data = train, family = binomial())
+summary(final_model)
 
 
 fitted.results1 <- predict(final_model, newdata=subset(test, type = 'response'))
