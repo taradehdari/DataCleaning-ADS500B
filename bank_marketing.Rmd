@@ -3,6 +3,9 @@ title: "bank_marketing"
 output: html_document
 date: "2023-04-03"
 ---
+# Final Project : Data Analysis and Preliminary Analytics
+##### Logan Van Dine, Sowmiya Kanmani Maruthavanan, Tara Dehdari
+##### April 17, 2023
 
 ```{r setup, include=FALSE}
 library (ggplot2)
@@ -14,11 +17,15 @@ library(caret)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-The dataset was collected from the UCI Machine Learning Repository covering the period from May 2008 to November 2010. The dataset pertains to the direct marketing campaigns conducted by a Portuguese banking institution. These campaigns involved making phone calls to potential clients to promote a bank term deposit product. In some cases, multiple contacts with the same client were necessary to determine if they are interested in subscribing to the deposit product or not.
+## Preliminary Analysis of Portuguese Marketing Data
 
-The bank_marketing.csv file is imported using the read.csv() function where the fields are separated by the semicolon (;). This function reads the data and stores it in a clientdata data frame. The dataset has 45211 rows and 17 columns. 
+The data set was collected from the UCI Machine Learning Repository covering the period from May 2008 to November 2010. The data set pertains to the direct marketing campaigns conducted by a Portuguese banking institution. These campaigns were conducted by phone calls to potential clients to promote a bank term deposit product. In some cases, multiple contacts with the same client were necessary to determine if they are interested in subscribing to the deposit product or not.
 
-The dataset contains a mix of numerical and categorical variables. The “age”, “balance”, “day”, “duration”, “campaign”, “pdays”, and “previous” variables are numerical variables. On the other hand, the variables “job”, “marital”, “education”, “contact”, “month”, and “poutcome” are categorical. Moreover, the dataset contains binary variables which include “default”, “housing”, “loan”, and “deposit” fields. 
+The bank_marketing.csv file is imported using the read.csv() function where the fields are separated by the semicolon (;). This function reads the data and stores it in a data frame labeled "clientdata". The data set has 45211 rows and 17 variables before any pre-processing has been started.
+
+The data set contains a mix of numerical, categorical, and binary variables. The age, balance, day, duration, campaign, pdays, and previous variables are numerical variables. Categorical data can be seen in the job, marital, education, contact, month, and poutcome variables. The binary variables of the data set can be seen in the default, housing, loan, and deposit fields.
+
+### Data Importing and Pre-Processing
 
 ```{r}
 clientdata <- read.csv("bank_marketing.csv",header=T,sep=";")
@@ -28,14 +35,13 @@ dim(clientdata)
 str(clientdata)
 #View(clientdata)
 ```
+#### Missing Values
 
-##Handling Missing values
+The data set contains missing values in the age (1339), default (1306), and contact (1383) fields.
 
-The dataset contains missing values in the Age (1339), default (1306), and contact (1383) fields. 
+The descriptive statistics of age represent a skewed variable and an abnormal distribution. The mean will not be a valuable replacement to account for the missing values of this variable. Rather, the median age, 39, will be used to replace missing age values.
 
-Looking at the descriptive statistics, we observe that the maximum values for numerical columns are too skewed, so the mean will not be a meaningful replacement for missing values as the data is not normally distributed. Hence replacing the missing values using the median.
-
-Default and contact columns are categorical and not numerical. Replacing the missing value with the mode would not be appropriate in this case. Hence, we can remove the records with the missing values in both columns.
+The default and contact variables are categorical data, not numerical. Replacing the missing value with the mode would not be appropriate in this case as we cannot make an informed decision based on other variables, rather it would be a random replacement. Without a replacement that would fit the data, it is best to remove the records that contain the missing values in these categorical variables.
 
 ```{r}
 colSums(is.na(clientdata) | clientdata == "")
@@ -43,25 +49,19 @@ colSums(is.na(clientdata) | clientdata == "")
 clientdata <- clientdata %>% filter(default != "" & contact != "")
 #Replace missing values in the "age" column with the median age of all non missing values in the same column
 clientdata <- clientdata %>% mutate(across(age, ~replace_na(., median(., na.rm=TRUE))))
+```
 
+
+```{r}
 colSums(is.na(clientdata))
 
-
 summary(clientdata)
-
-
-
 ```
-##Identifying and Treating Outliers
 
-Box plots were created to identify the outliers for the numerical variables- Age, Balance, Day, Duration, Campaign, Pdays, and Previous. In general, removing outliers from a large dataset is a common practice in data preprocessing and analysis, especially when the outliers are believed to be due to errors or measurement issues. 
+#### Identifying and Treating Outliers
+After removal of missing values, it is necessary to determine if any outliers are present in the data that could potentially skew final results of an analysis. Multiple box plots were created to identify the outliers for the seven numerical variables. In general, removing outliers from a large data set is a common practice in data pre-processing and analysis, especially when the outliers are believed to be due to errors or measurement issues.
 
-Age, Balance, Duration, Campaign, and Pdays – Outliers in these variables are not removed because removing them may provide a loss of information and distortion of the distribution of the data.
-
-Day – No outliers present.
-
-Previous – Holds the number of contacts performed before this campaign for the client. The value ranges between 0 and 58, barring one value to be 275. This value is assumed to be an outlier and is removed.
-
+Upon creation, it is found that six of the numerical values have outliers. The only variable proven to not have outliers present is day, which represent the last day of contact of the month. However, of the six variables with outliers, only one will have the outliers removed. The previous variable, measuring the number of contacts a client has had before the current campaign call, ranges between 0 and 58 with the exception of one record. The record with this value, 275, has been removed to smooth the distribution of the previous variable. All other variables that included outliers (age, balance, duration, campaign, and pdays) have been left untouched because the quantity of outliers is too high to remove. Removal of these outliers would significantly change the data overall.
 
 ```{r}
 #identifying outliers
@@ -86,21 +86,28 @@ ggplot(data = clientdata, aes(x = "", y = previous)) + geom_boxplot() +
 clientdata <- clientdata %>% filter(previous != max(previous))
 #Checking the box plot of Previous variable after removing one outlier
 ggplot(data = clientdata, aes(x = "", y = previous)) + geom_boxplot() +
-  labs(title = "Boxplot of Previous variable in Bank Marketing Dataset", x = "previous", y = "No of contacts")
+  labs(title = "Boxplot of Previous variable in Bank Marketing Dataset after Outlier Removal", x = "previous", y = "No of contacts")
 summary(clientdata$previous)
 ```
 
-## Data Aggregation
+
+#### Data Aggregation
+Now that the data set is complete and representing significant data, we move to aggregate the different categorical variables to maintain a better understanding of the population.
+
+Below, we are visualizing the number of term deposits subscribed by the clients based on their job type. Based on the data provided, it appears that clients in management roles have subscribed to the highest number of term deposits, with a total of 1232 deposits, followed by technicians with 795 deposits and blue-collar workers with 670 deposits.
+
+Clients in the services, student, unemployed, self-employed, and entrepreneur categories have subscribed to fewer term deposits, with the numbers ranging from 115 to 344.
+
+This initial aggregate of job type does not take in to account that there are potentially more records with job type representative of management, therefor holding more weight. Normalization will assist in visualizing that the ratios of deposits made may be larger in other categories.
 
 ```{r}
 #Aggregating the data by job type
 clientdata %>% group_by(job) %>% summarize(total_deposits = sum(deposit == 'yes')) %>% arrange(desc(total_deposits))
 ```
-The above table shows the number of term deposits subscribed by the clients based on their job type. Based on the data provided, it appears that clients in management roles have subscribed to the highest number of term deposits, with a total of 1232 deposits, followed by technicians with 795 deposits and blue-collar workers with 670 deposits.
 
-Clients in the services, student, unemployed, self-employed, and entrepreneur categories have subscribed to fewer term deposits, with the numbers ranging from 115 to 344.
+The second aggregation shown below represents the total number of deposits subscribed for each month in the marketing campaign. Looking at the data, we can see that May had the highest number of deposits, with a total of 880. This suggests that the marketing campaign was particularly successful in May or that customers tend to have more income or savings during this time of year. Following up the aggregation of total deposits by month with total contacts by month, we can see that the most contacts to clients were made in May. This increase in contacts could be reason for the number of secured deposits in the month of May.
 
-The is the total number of deposits based on job type not taking into account that there might be more management in the dataset. Later in the file we can see the normalized data and see that although there are less deposits in students the ratio of students who had a deposit and the amount of students in the data set are higher tha the other job categories. 
+The second-highest number of deposits were subscribed in August, with a total of 658 deposits followed by July, with a total of 590 deposits. This indicates that the campaign was also successful in these months. Similar to the month of May, the number of contacts for August and July coincide with the level of secured deposits.
 
 ```{r}
 #Aggregating the data by month
@@ -108,74 +115,24 @@ clientdata %>% group_by(month) %>% summarize(total_deposits = sum(deposit == 'ye
 clientdata %>% group_by(month) %>% summarize(total_contacts = sum(campaign)) %>% arrange(desc(total_contacts))
 ```
 
-The output shows the total number of deposits subscribed for each month in the marketing campaign. Looking at the data, we can see that May had the highest number of deposits, with a total of 880. This suggests that the marketing campaign was particularly successful in May or that customers tend to have more income or savings during this time of year.  
-
-The second-highest number of deposits were subscribed in August, with a total of 658 deposits followed by July, with a total of 590 deposits. This indicates that the campaign was also successful in these months.
-
-
-## Numerical Correlations
-
-In this code we are looking at the correlation between the numerical values. The first line of code creates a variable called cols that includes all of the numerical columns in the data set client data. The next line of code creates the correlation matrix with the numeric columns and the third line of code prints out the correlation matrix. Through the output we can see that none of the numeric values show any high correlation. 
+As mentioned previously, a few clients that are being contacted with the current campaign have been contacted prior. The below table represents the total number of secured deposits based on the result of the previous campaign call (success, failure, unknown, other). The aggregation shows that when the previous outcome was unknown, the client was more likely to elect to make a deposit. The second most secured deposits is listed when the previous campaign was a success. We can infer that if a client was deemed a success in previous campaigns that they are a loyal customer and will continue to be secured deposits for the bank.
 
 ```{r}
-#2c diagnose correlations between variables and determine indpendent and dependent variables
-#correlation matrix
-cols <- clientdata[, c("age", "balance", "duration","campaign", "pdays", "previous", "day", "deposit")]
-# convert deposit to 1,0 
-cols$deposit <- ifelse(cols$deposit == "yes", 1, 0)
-
-#correlation matrix
-corr_matrix <- cor(cols, use="pairwise.complete.obs")
-options(scipen = 999) # disable scientific notation
-print(corr_matrix, digits = 6) # specify the number of decimal places
-
-
-```
-## Tetrachoric Correlation
-
-A tetrachoric correlation is performed on deposit and age group, job, marital, and education. A tetrachoric correlation takes the correlation of binary and categorical variables. Through the correlations we can see that there are no high correltions between the categorical variables, and earlier we noticed how there were no high correlations between the numerical values as well. 
-```{r error=False, message=FALSE, warning=FALSE}
-
-# Creating age groups
-clientdata$age_group <- cut(clientdata$age, breaks = c(15, 29, 39, 49, 59, 69, 79, 95), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-95"))
-
-# Converting age to a factor
-clientdata$age_group <- factor(clientdata$age_group, levels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-95"))
-
-# Save the modified data back to same file
-write.csv(clientdata, "clientdata.csv", row.names = FALSE)
-
-# categorical columns
-cat_data <- clientdata[, c("deposit", "age_group", "marital", "job", "education", "default", "housing", "loan", "poutcome")]
-
-# convert deposit to 1,0 
-cat_data$deposit <- ifelse(cat_data$deposit == "yes", 1, 0)
-
-#view(cat_data)
-
-#convert categorical variables to factors
-cat_data$age_group <- factor(cat_data$age_group)
-cat_data$marital <- factor(cat_data$marital)
-cat_data$job <- factor(cat_data$job)
-cat_data$education <- factor(cat_data$education)
-cat_data$default <- factor(cat_data$default)
-cat_data$housing <- factor(cat_data$housing)
-cat_data$loan <- factor(cat_data$loan)
-cat_data$poutcome <- factor(cat_data$poutcome)
-
-corr_matrix_cat <- hetcor(as.matrix(cat_data), use = "pairwise.complete.obs")
-                          
-corr_matrix_cat$correlations
-
-
-
-
+#Aggregating the data by poutcome
+clientdata %>% group_by(poutcome) %>% summarize(total_deposits = sum(deposit == 'yes')) %>% arrange(desc(total_deposits))
 ```
 
-For numerical values the mean, median, and mode were calculated to look at the measures of centrality. The measures of centrality provides information about the skewness of the dataset. EXPLAIN SKEWNESS
+### Data Analysis and Visualization
+
+#### Measures of Centrality
+  
+The mean, median, and mode have been calculated in the summary data frame below of the seven numerical variables. These measures of centrality provide insight to the distribution of the numerical data and clue us in to any possibility of skewness that we may see in specific variables.
+
+The variable that stands out against the others is balance. The balance in the "clientdata" data set is said to be a client's average yearly balance in Euros. The mode of this variable is 0, implying that this client did not have a yearly balance which is highly unlikely and potentially makes the data unreliable to help predict the outcome of the dependent variable. Moving forward, this variable specifically will not be reliable in the relationship of balance to deposit result.
+
+Similarly, the pdays, or the number of days that have passed since the client was last contacted, shows a mode of -1. The -1 represents that the client has not been contacted for a prior campaign meaning that most records included in the data set are new clients. Overall there are too many variations in the consistency of records that make is difficult to find patterns among relationships. This makes the understanding of loyal customers from previous, successful campaigns, harder to analyze when majority of clients are new to the Portuguese bank.
+
 ```{r}
-#2b: provides measures of centrality and distribution with visualizations
-
 #numerical measures of centrality --> mean, median, mode
 #measures of centrality of age
 mean_age <- round(mean(clientdata$age),2)
@@ -209,6 +166,11 @@ mode_duration <- clientdata %>%
   filter(n == max(n)) %>% 
   pull(duration)
 
+#check if there are two modes
+if (length(mode_duration) > 1) {
+  mode_duration <- paste(mode_duration, collapse = ", ")
+}
+
 #measures of centrality of campaign
 mean_campaign <- round(mean(clientdata$campaign),2)
 median_campaign <- round(median(clientdata$campaign),2)
@@ -240,9 +202,9 @@ summary_df <- data.frame(
   Mode = c(mode_age,mode_balance,mode_day,mode_duration,mode_campaign,mode_pdays,mode_previous)
 )
 summary_df
-
 ```
-For categorical variables mode was calculated to observe the measures of centrality. The mode of each categorical variables shows what is most used in each categorical variable. So there are more blue-collar jobs observed in the data set. There are more married couples in this data set. There are more people who completed secondary education than other education levels. The primary mode of contact is cellular. Majority of people were last contacted in May, and majority of the outcome of the previous marketing campaign is unknown.
+
+The most useful measure of centrality for categorical variables is mode, showing the value that occurs most often in the "clientdata" data set. The below table shows each categorical variable and the corresponding value that is seen most throughout the data.
 
 ```{r}
 #categorical measures of centrality --> mode
@@ -288,26 +250,28 @@ mode_df <- data.frame(
 )
 mode_df
 ```
-For the binary measures of centrality the frequency tables were printed. There are more no in default, loan and deposit than yes, and there are more yes in housing than no. 
+
+In order to find measures of centrality for binary variables, frequency tables have been created below. It is seen that variables default, loan, and deposit experience more no responses. Whereas the housing variable records more yes responses. In other words, when questioned, more people have current housing loans than not.
+
 ```{r}
 #binary measures of centrality --> frequency tables 
-# Create frequency tables of the binary columns
 default_table <- table(clientdata$default)
 housing_table <- table(clientdata$housing)
 loan_table <- table(clientdata$loan)
 deposit_table <- table(clientdata$deposit)
 
-#print frequency tables in table format
 freq_df <- rbind(default_table,housing_table,loan_table,deposit_table)
 row.names(freq_df) <-  c("Default","Housing","Loan","Deposit")
 freq_df
-
-
 ```
-Measures of distribution provide information about the spread of the dataset.
+
+#### Distribution
+
+Outside of the main measures of centrality, mean, median, and mode, different measurements can be made in order to make inferences about the distribution of the data. Below, we find the range, variance, standard deviation, and interquartile range of the numerical variables of the "clientdata".
+
+It is observed that balance, duration, and pdays have a higher standard deviation meaning that there is a wide range of values in these variables in relation to the mean. This is an expected observation since each client is going to be in a different place financially and because duration is recorded in seconds. These two variables also represent the largest interquartile ranges in the below table, validating that the middle portion of data of these variables experiences more variability than that of the other five numerical variables.
 
 ```{r}
-#getting measures of distribution for numerical variables--> range, variance, standard deviation, interquartile range
 #measures of distribution of age
 var_age <- round(var(clientdata$age),2)
 sd_age <- round(sd(clientdata$age),2)
@@ -375,39 +339,22 @@ variability_df = data.frame(
 variability_df
 ```
 
-
+In order to have an idea of the distribution of categorical and binary variables, the below frequency tables have been created. The frequencies of each variable provides insight to why certain categories may be more present in the deposit variable.
 
 ```{r}
-#measures of distribution for categorical and binary variables --> frequency
 categorical_vars <- c("job","marital","education","contact", "month", "poutcome")
 for (var in categorical_vars){
   freq_table <- table(clientdata[[var]])
-  print(paste("Frequency table for", var))
+  print(paste("Frequency Table For", var))
   print(freq_table)
 }
-
-```
-##Exploratory Visualizations
-These groups of code were to look at different types of visualizations with the different data sets. 
- 
-
-```{r}
-#2d: perform exploratory analysis in combination with visualization techniques to discover patterns and feautures of interest
-
-
-ggplot(clientdata, aes(x = previous, y = pdays)) +
-  geom_point(color = "steelblue") +
-  labs(title = "Scatter plot of previous and pdays", x = "Previous", y = "Pdays")
-
-ggplot(clientdata, aes(x = duration, y = pdays)) +
-  geom_point(color = "brown") +
-  labs(title = "Scatter plot of duration and pdays", x = "Duration", y = "Pdays")
-
 ```
 
-These were histograms used to visualize the distribution of individual variables, just to look at the spread and skewness. 
+The histograms below further analyze the distribution of individual variables. Similar to frequency tables, the histograms provide a visualization of the frequency numerical variables and the variability across the variables.
+
 ```{r}
-#histogram to visualize the distribution of individual variables
+#histogram of age
+hist(clientdata$age, main = "Histogram of Age", xlab = "Age", ylab = "Frequency")
 
 #histogram of duration
 hist(clientdata$duration, main = "Histogram of Duration", xlab = "Duration", ylab = "Frequency")
@@ -417,42 +364,95 @@ hist(clientdata$pdays, main = "Histogram of Pdays", xlab = "Pdays", ylab = "Freq
 
 #histogram of days
 hist(clientdata$day, main="Histogram of Days", breaks = 40, xlab= "Days", ylab="Frequency")
+```
+
+#### Correlations
+
+##### Numerical Correlations
+
+To determine what variables have a relationship and a potential significance to the outcome of the deposit variable, a correlation matrix has been created for all seven numerical variables. To visualize the correlation between these variables and the binary variable, deposit, deposit has been translated to the value 1 for response "yes", and 0 for "no".
+
+A strong positive and/or negative relationship between variables is represented by a coefficient close to +/- 1. In the matrix below of numeric variables, there does not appear to be any strong relationships, negative or positive. Specifically, looking at the coefficients of deposit vs. all other variables, no significance is recorded.
+
+```{r}
+#correlation matrix
+cols <- clientdata[, c("age", "balance", "duration","campaign", "pdays", "previous", "day", "deposit")]
+
+# convert deposit to 1,0
+cols$deposit <- ifelse(cols$deposit == "yes", 1, 0)
+#correlation matrix
+
+corr_matrix <- cor(cols, use="pairwise.complete.obs")
+options(scipen = 999) # disable scientific notation
+print(corr_matrix, digits = 6) # specify the number of decimal places
+```
+
+##### Tetrachoric Correlation
+
+With no apparent significance in the numerical correlation matrix, we move to create a correlation between categorical variables in order to discover any relationship for the deposit variable that will help us predict the outcome of a marketing campaign.
+
+A tetrachoric correlation, a correlation of binary and categorical variables, is performed on deposit and age group, job, marital, and education. The tetrachoric correlation shows similar results to that of the numerical correlation matrix. There are not any categorical variables that have a strong positive or negative relationship with the outcome of the deposit variable.
+
+```{r error=False, message=FALSE, warning=FALSE}
+# Creating age groups
+clientdata$age_group <- cut(clientdata$age, breaks = c(15, 29, 39, 49, 59, 69, 79, 95), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-95"))
+
+# Converting age to a factor
+clientdata$age_group <- factor(clientdata$age_group, levels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-95"))
+
+# Save the modified data back to same file
+write.csv(clientdata, "clientdata.csv", row.names = FALSE)
+
+# categorical columns
+cat_data <- clientdata[, c("deposit", "age_group", "marital", "job", "education", "default", "housing", "loan", "poutcome")]
+
+# convert deposit to 1,0
+cat_data$deposit <- ifelse(cat_data$deposit == "yes", 1, 0)
+#view(cat_data)
+
+#convert categorical variables to factors
+cat_data$age_group <- factor(cat_data$age_group)
+cat_data$marital <- factor(cat_data$marital)
+cat_data$job <- factor(cat_data$job)
+cat_data$education <- factor(cat_data$education)
+cat_data$default <- factor(cat_data$default)
+cat_data$housing <- factor(cat_data$housing)
+cat_data$loan <- factor(cat_data$loan)
+cat_data$poutcome <- factor(cat_data$poutcome)
+corr_matrix_cat <- hetcor(as.matrix(cat_data), use = "pairwise.complete.obs")
+corr_matrix_cat$correlations
 
 ```
 
+After creating the two correlation matrices for both numerical and categorical variables and finding no significant relationship with the deposit variable it is difficult to single in on select independent variables. Moving forward, the dependent variable, deposit, will be included in visualizations with multiple other variables to attempt to determine a relationship beyond the correlation coefficient. At this point in the analysis, the assumption is that all other variables will be independent variables in the prediction of the deposit outcome.
+
+#### Exploratory Visualizations
+
+Knowing that the correlation matrices do not support the visualization of relationships among variables, different types of visualizations have been created below to further understand the variables. Below, scatterplots have been created among different independent variables to determine any relations.
+
+The plots do not exemplify any positive or negative relationship, as we expected after the correlation matrices results. However, the relationship between duration and both the pdays and previous variables is more closely comparable to an exponential relationship.
+
 ```{r}
-ggplot(clientdata, aes(fill=deposit, y=balance, x=deposit)) + 
-    geom_bar(position="dodge", stat="identity") +
-    ggtitle("Studying 4 Outcomes of Previous Campaign vs. Deposit Made") +
-    facet_wrap(~poutcome) +
-    theme(legend.position="none") +
-    xlab("Deposit Made") +
-    ylab("Balance (€)")
+ggplot(clientdata, aes(x = previous, y = pdays)) +
+  geom_point(color = "steelblue") +
+  labs(title = "Scatter plot of previous and pdays", x = "Previous", y = "Pdays")
+ggplot(clientdata, aes(x = duration, y = pdays)) +
+  geom_point(color = "brown") +
+  labs(title = "Scatter plot of duration and pdays", x = "Duration", y = "Pdays")
+ggplot(clientdata, aes(x = duration, y = previous)) +
+  geom_point(color = "pink") +
+  labs(title = "Scatter plot of duration and pdays", x = "Previous", y = "Pdays")
 ```
 
+#### Normalizations and Visualizations
+Since the both the numerical and categorical correlation matrices did not represent strong positive or negative relationships, we are moving to visualize the dependent variable, deposit, against independent variables that we believe may have a significance. In order to properly compare the visualizations against one another, normalization was needed in the dependent variable, deposit, to hold an even weight by counts of observations. The deposit variable was normalized in all cluster bar charts by the yes or no's recorded based on the number of clients for each variable.
 
-##Normalizations and Visualizations
-Our dependent variable is deposit and in order to build a final model cluster bar charts were created to visualize what type of clients are more likely to put in deposits. First age and deposit were graphed on a cluster bar chart in order to see which age group had the highest deposits, through initial visualization it was noticed that there were more deposits in the age group that the data set had more of (30-39 year olds), in order to create bar charts that would give an understanding of the relationship between age and deposit the data had to be normalized. From the normalized bar chart it is seen that 80-95 year olds have the highest amount of deposits. To normalize the data the count of each yes or no in each age group was divided by the total number of clients in that age group. This normalized the data so that when the data set had more data for ages 30-39 it wouldn't matter. Through the scatter plot of age and balance we can see that from ages 50-59 people tend to have a higher balance but less deposits (which we can see in the barchart).  
-```{r}
+The first independent variable to be visualized, age, was aggregated into an age range to disperse the counts. This aggregation was a necessity as the "Clients by Age Group" bar chart below shows an increased number of clients in the age group 30-39; which will have a skew on the distribution of the dependent variable.
+
+```{r, warning=FALSE}
 # Group data by age group and deposit, and count number of observations
 df <- clientdata %>%
   group_by(age_group, deposit) %>%
-  summarize(count = n()) %>%
-  ungroup()
-
-# Create clustered bar chart deposit vs, age 
-ggplot(df, aes(x = age_group, y = count, fill = deposit)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(title = "Deposits by Age Group",
-       x = "Age Group",
-       y = "Count of Deposits",
-       fill = "Deposit") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
-#bar chart of age group to see which age group is most in the dataset
-# Group data by age group and calculate the count
-agecount <- clientdata %>%
-  group_by(age_group) %>%
   summarize(count = n()) %>%
   ungroup()
 
@@ -464,10 +464,6 @@ ggplot(agecount, aes(x = age_group, y = count)) +
        y = "Count of Clients") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
 
-#30-49 age is highest which is why there are more deposits in that age group to fix 
-#this we are going to normalize the counts by the total number of clients in each age group,this way the resulting count will take into account that there are different number of clients in each age group.
-# group data by age group and calculate the count (which we have above)
-#view(agecount)
 # group data by age and deposit and calculate the count
 age_depo_count <- clientdata %>%
   group_by(age_group, deposit) %>%
@@ -482,25 +478,20 @@ age_depo_count_norm <- left_join(age_depo_count, agecount, by = "age_group")
 age_depo_count_norm$count_norm <- age_depo_count_norm$count.x / age_depo_count_norm$count.y
 
 # clustered bar chart deposit vs, age
-ggplot(age_depo_count_norm, aes(x = age_group, y = count_norm, fill = deposit)) + 
+ggplot(age_depo_count_norm, aes(x = age_group, y = count_norm, fill = deposit)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Deposits by Age Group",
        x = "Age Group",
        y = "Normalized Count of Deposits",
-       fill = "Deposit") + 
+       fill = "Deposit") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
-
-ggplot(clientdata, aes(x = age_group, y = balance)) +
-  geom_point() +
-  labs(title = "Scatter plot of Age and Balance", x = "Age", y = "Balance")
-#deposit y dependent variable
-
 ```
 
-Using the job column in the data set, this code chunk is normalizing the number of deposits for each job title and graphing them in a clustered barchart to see what job has the majority of deposits. From the barchart students seem to deposit more than other job types. 
-```{r}
+After normalization, we can see that all age groups are subject to recording more no's than secured deposits. However, the age group 80-95 seems to record the highest value of secured deposits based on the normalized values. Since there is a wide spread between the recorded answers, it is best if age group is not included as an independent variable in the final model as most recorded a no for deposit within the range, not independent records.
 
+Similar normalization techniques of the dependent variable a clustered bar chart has been created to compare the job type to the deposit type of the client. This bar chart will show which job type has the most deposits recorded and separate these recordings out to "yes" and "no".
+
+```{r message=FALSE}
 # Group data by  job and deposit, and count number of observations
 jobcount <- clientdata %>%
   group_by(job) %>%
@@ -513,7 +504,6 @@ job_depo_count <- clientdata %>%
   group_by(job, deposit) %>%
   summarize(count = n()) %>%
   ungroup()
-
 #view(job_depo_count)
 
 # join two datasets by job and deposit
@@ -523,19 +513,21 @@ job_depo_count_norm <- left_join(job_depo_count, jobcount, by = c("job"))
 # calculate the normalized count of deposits
 job_depo_count_norm$count_norm <- job_depo_count_norm$count / job_depo_count_norm$count1
 
-# clustered bar chart deposit vs, age
-ggplot(job_depo_count_norm, aes(x = job, y = count_norm, fill = deposit)) + 
+# clustered bar chart deposit vs job type
+ggplot(job_depo_count_norm, aes(x = job, y = count_norm, fill = deposit)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Deposits by Job",
        x = "Job",
        y = "Normalized Count of Deposits",
-       fill = "Deposit") + 
+       fill = "Deposit") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
 ```
-Using the Marital column in the data set, this code chunk is normalizing the number of deposits for each marital status and graphing them in a clustered barchart to see what marital status has the majority of deposits. From the barchart it seems that people who are single seem to deposit more than other job types. 
 
-```{r}
+Similar to "Deposits by Age Group" the above bar chart experiences many more no's recorded. However, the chart allows us to visualize that of the job types, students recorded the most secured deposits. This is interesting because logically, one would assume that students are not going to be placing large deposits financially.
+
+Below, we have normalized the deposit variable again to compare it to the marital status of the clients.
+
+```{r message=FALSE}
 # Group data by marital and deposit, and count number of observations
 maritalcount <- clientdata %>%
   group_by(marital) %>%
@@ -543,34 +535,75 @@ maritalcount <- clientdata %>%
   ungroup()
 #view(maritalcount)
 
-# group data by job and deposit and calculate the count
+# group data by marital and deposit and calculate the count
 marital_depo_count <- clientdata %>%
   group_by(marital, deposit) %>%
   summarize(count = n()) %>%
   ungroup()
-
 #view(marital_depo_count)
 
-# join two datasets by job and deposit
+# join two datasets by marital and deposit
 marital_depo_count_norm <- left_join(marital_depo_count, maritalcount, by = c("marital"))
 #view(marital_depo_count_norm)
 
 # calculate the normalized count of deposits
 marital_depo_count_norm$count_norm <- marital_depo_count_norm$count / marital_depo_count_norm$count1
 
-# clustered bar chart deposit vs, age
-ggplot(marital_depo_count_norm, aes(x = marital, y = count_norm, fill = deposit)) + 
+# clustered bar chart deposit vs marital status
+ggplot(marital_depo_count_norm, aes(x = marital, y = count_norm, fill = deposit)) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(title = "Deposits by Marital Status",
        x = "Marital",
        y = "Normalized Count of Deposits",
-       fill = "Deposit") + 
+       fill = "Deposit") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
 ```
 
+The "Deposits by Marital Status" clustered bar chart represents that of the deposits that recorded a yes, single clients accounted for more. Once again, the chart is taken over by recorded "no's".
 
-## Exploring Logistic Regression to get a final visualization and model
+The last variable suspected to have an affect on the deposit variable is the previous outcome of an earlier campaign call made to the same client, poutcome. Again, the deposit variable has been normalized.
+
+```{r message=FALSE}
+# Group data by previous outcome and deposit, and count number of observations
+previousoutcomecount <- clientdata %>%
+  group_by(poutcome) %>%
+  summarize(count1 = n()) %>%
+  ungroup()
+#view(maritalcount)
+
+# group data by poutcome and deposit and calculate the count
+poutcome_depo_count <- clientdata %>%
+  group_by(poutcome, deposit) %>%
+  summarize(count = n()) %>%
+  ungroup()
+#view(poutcome_depo_count)
+
+# join two datasets by poutcome and deposit
+poutcome_depo_count_norm <- left_join(poutcome_depo_count, previousoutcomecount, by = c("poutcome"))
+#view(poutcome_depo_count_norm)
+
+# calculate the normalized count of deposits
+poutcome_depo_count_norm$count_norm <- poutcome_depo_count_norm$count / poutcome_depo_count_norm$count1
+
+# clustered bar chart deposit vs previous outcome
+ggplot(poutcome_depo_count_norm, aes(x = poutcome, y = count_norm, fill = deposit)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Deposits by Previous Outcome",
+       x = "Previous Outcome",
+       y = "Normalized Count of Deposits",
+       fill = "Deposit") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+The "Deposits by Previous Outcome" bar chart records the only variable that has been visualized to have more "yes" records than "no". This variable is going to be one that is significant to include in the final model in predicting the deposit variable. The bank recorded more successful deposits when the client has previously made a deposit in an earlier campaign. This further supports the idea that the bank has loyal customers that are continuing to do business with the Portuguese bank.
+
+### Data Analytics
+
+#### Supervised Learning - Logistic Regression
+
+After visualizing the dependent variable, deposit, against independent variables that we felt would have a relationship, although small, we are going to move forward with creating an overall model to then be transitioned to better fit. The initial model below will include all independent variables from the "clientdata" data set after normalization. A supervised learning model, logistic regression, will be used to to help predict our binary, dependent variable. Supervised learning will allow us to predict the deposit outcome based on the outcomes of previous records from the "clientdata" data set.
+
+##### Initial Logistic Regression
 ```{r warning=FALSE}
 #creating categorical variables into factors 
 clientdata$job <- as.factor(clientdata$job)
@@ -595,21 +628,20 @@ model <- glm(deposit ~ age + job + marital + education + default + balance + hou
 summary(model)
 
 fitted.results <- predict(model, newdata=subset(test, type = 'response'))
-predicted.results <- ifelse(fitted.results > 0.5, 1, 0)
+predicted.results <- factor(ifelse(fitted.results > 0.5, "yes", "no"), levels = levels(test$deposit))
 
 predicted.results <- mean(predicted.results != test$deposit)
 
-
-print(paste('accuracy', 1-predicted.results))                    
-
-
-
+print(paste('accuracy', 1-predicted.results))   
 ```
 
+When creating a logistic model including all independent variables, we can see that the model breaks the variables out in to their respective labels (ex: "jobblue-collar"). This makes it very difficult to determine which variables as a whole have a large effect on the outcome of deposit, the dependent variable. As we can see the p-value for all variables are exceptionally low indicating that they would be good predictors of the dependent variable. However, the predicted accuracy of the model is [BLANK] which may indicate that the model is already overfit with all variables included.
 
-## Final Logistic Model 
-do a logistic regression with poutcome, jobs and deposit as dependent variable (y)
-then say final model but not best model cuz nothing works 
+As expected after exploratory visualizations in prior analysis, the previous outcome of prior campaigns being a success is a good indication to predicting the deposit variable. Similarly, certain job types are seen to be helpful indicators as well. With this knowledge, we move to create a second logistic regression that narrows down to these two variables.
+
+##### Final Logistic Model
+
+The below logistic regression model represents the independent variables job type and previous outcome and the ability of these variables to predict the dependent variable, deposit.
 
 ```{r}
 final_model <- glm(deposit ~ job + poutcome, data = train, family = binomial())
@@ -624,10 +656,9 @@ predicted.results1 <- mean(predicted.results1 != test$deposit)
 predicted.results1 <- as.numeric(predicted.results1)
 results_df <- data.frame(Predicted = predicted.results1, Actual = as.numeric(test$deposit))
 
-print(paste('accuracy', 1-predicted.results1)) 
-
+print(paste('accuracy', 1-predicted.results1))
 ```
 
+Once again, we are seeing a low accuracy prediction indicating that this model is not a great fit for the prediction of deposit. The accuracy prediction of the above logistic regression is calculated at .00446. As we have learned throughout the exploratory analysis and visualizations, this low accuracy prediction (despite very low p-values for each variable) is likely because there is not an independent variable that has a linear relationship with the dependent variable.
 
-
-
+Overall, the Portuguese Bank is going to struggle to predict whether a client will or will not make a deposit based on the independent variables provided. To further improve the model, the bank may benefit from more numerical values that can provide more historical financial information on the clients being sought after. The independent variables that the bank is currently analyzing are not providing sufficient enough correlations to the desired variable to make trustworthy predictions.
