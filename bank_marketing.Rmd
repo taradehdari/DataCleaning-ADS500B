@@ -646,17 +646,27 @@ The below logistic regression model represents the independent variables job typ
 ```{r}
 final_model <- glm(deposit ~ job + poutcome, data = train, family = binomial())
 
-summary(final_model)
 
 fitted.results1 <- predict(final_model, newdata=subset(test, type = 'response'))
-predicted.results1 <- ifelse(fitted.results1 > 0.5, 1, 0)
+predicted.results1 <- factor(ifelse(fitted.results1 > 0.5, "yes", "no"), levels = levels(test$deposit))
+confusion_matrix <- confusionMatrix(predicted.results1, test$deposit)
+accuracy <- mean(predicted.results1 == test$deposit)
+
 
 predicted.results1 <- mean(predicted.results1 != test$deposit)
 
 predicted.results1 <- as.numeric(predicted.results1)
 results_df <- data.frame(Predicted = predicted.results1, Actual = as.numeric(test$deposit))
 
-print(paste('accuracy', 1-predicted.results1))
+# print confusion matrix
+print(confusion_matrix$table)
+
+# print accuracy
+accuracy <- confusion_matrix$overall['Accuracy']
+print(paste('accuracy', accuracy))
+
+# print other evaluation metrics
+print(confusion_matrix$byClass)
 ```
 
 Once again, we are seeing a low accuracy prediction indicating that this model is not a great fit for the prediction of deposit. The accuracy prediction of the above logistic regression is calculated at .00446. As we have learned throughout the exploratory analysis and visualizations, this low accuracy prediction (despite very low p-values for each variable) is likely because there is not an independent variable that has a linear relationship with the dependent variable.
