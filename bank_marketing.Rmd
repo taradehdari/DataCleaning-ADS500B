@@ -1,10 +1,15 @@
 ---
 title: "bank_marketing"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2023-04-03"
 ---
+
 # Final Project : Data Analysis and Preliminary Analytics
+
 ##### Logan Van Dine, Sowmiya Kanmani Maruthavanan, Tara Dehdari
+
 ##### April 17, 2023
 
 ```{r setup, include=FALSE}
@@ -35,6 +40,7 @@ dim(clientdata)
 str(clientdata)
 #View(clientdata)
 ```
+
 #### Missing Values
 
 The data set contains missing values in the age (1339), default (1306), and contact (1383) fields.
@@ -50,7 +56,6 @@ clientdata <- clientdata %>% filter(default != "" & contact != "")
 #Replace missing values in the "age" column with the median age of all non missing values in the same column
 clientdata <- clientdata %>% mutate(across(age, ~replace_na(., median(., na.rm=TRUE))))
 ```
-
 
 ```{r}
 colSums(is.na(clientdata))
@@ -91,7 +96,6 @@ ggplot(data = clientdata, aes(x = "", y = previous)) + geom_boxplot() +
 summary(clientdata$previous)
 ```
 
-
 #### Data Aggregation
 
 Now that the data set is complete and representing significant data, we move to aggregate the different categorical variables to maintain a better understanding of the population.
@@ -127,7 +131,7 @@ clientdata %>% group_by(poutcome) %>% summarize(total_deposits = sum(deposit == 
 ### Data Analysis and Visualization
 
 #### Measures of Centrality
-  
+
 The mean, median, and mode have been calculated in the summary data frame below of the seven numerical variables. These measures of centrality provide insight to the distribution of the numerical data and clue us in to any possibility of skewness that we may see in specific variables.
 
 The variable that stands out against the others is balance. The balance in the "clientdata" data set is said to be a client's average yearly balance in Euros. The mode of this variable is 0, implying that this client did not have a yearly balance which is highly unlikely and potentially makes the data unreliable to help predict the outcome of the dependent variable. Moving forward, this variable specifically will not be reliable in the relationship of balance to deposit result.
@@ -395,7 +399,7 @@ With no apparent significance in the numerical correlation matrix, we move to cr
 
 A tetrachoric correlation, a correlation of binary and categorical variables, is performed on deposit and age group, job, marital, and education. The tetrachoric correlation shows similar results to that of the numerical correlation matrix. There are not any categorical variables that have a strong positive or negative relationship with the outcome of the deposit variable.
 
-```{r error=False, message=FALSE, warning=FALSE}
+```{r error=FALSE, message=FALSE, warning=FALSE}
 # Creating age groups
 clientdata$age_group <- cut(clientdata$age, breaks = c(15, 29, 39, 49, 59, 69, 79, 95), labels = c("18-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-95"))
 
@@ -448,14 +452,14 @@ ggplot(clientdata, aes(x = duration, y = previous)) +
 
 #### Normalizations and Visualizations
 
-Since both the numerical and categorical correlation matrices did not represent strong positive or negative relationships, we are moving to visualize the dependent variable, deposit, against independent variables that we believe may have a significance. In order to properly compare the visualizations against one another, normalization was needed in the independent variables to hold an even weight by counts of observations. The independent variable was normalized in all cluster bar charts to ensure that if a group in that variable had more occurrences in the data set it wouldn't affect the results. For example, there are more ages from 30-39 so if a normalization wasn't done there would be more occurrences of 30-39 for deposits but with a normalization we can observe by ration whether a age group does more or less deposits. 
+Since both the numerical and categorical correlation matrices did not represent strong positive or negative relationships, we are moving to visualize the dependent variable, deposit, against independent variables that we believe may have a significance. In order to properly compare the visualizations against one another, normalization was needed in the independent variables to hold an even weight by counts of observations. The independent variable was normalized in all cluster bar charts to ensure that if a group in that variable had more occurrences in the data set it wouldn't affect the results. For example, there are more ages from 30-39 so if a normalization wasn't done there would be more occurrences of 30-39 for deposits but with a normalization we can observe by ration whether a age group does more or less deposits.
 
-The first independent variable to be visualized, age, was aggregated into an age range so that visually we can see the different ages. The first graph shows how there is more 30-39 year olds in our age groups so a normalization was a necessity so that the second graph wouldn't be biased. 
+The first independent variable to be visualized, age, was aggregated into an age range so that visually we can see the different ages. The first graph shows how there is more 30-39 year olds in our age groups so a normalization was a necessity so that the second graph wouldn't be biased.
 
 ```{r, warning=FALSE, message=FALSE, error=FALSE}
 # Group data by age group and deposit, and count number of observations
-df <- clientdata %>%
-  group_by(age_group, deposit) %>%
+agecount <- clientdata %>%
+  group_by(age_group) %>%
   summarize(count = n()) %>%
   ungroup()
 
@@ -639,7 +643,7 @@ print(paste('accuracy', 1-predicted.results))
 
 ```
 
-When creating a logistic model including all independent variables, we can see that the model breaks the variables out in to their respective labels (ex: "jobblue-collar"). This makes it very difficult to determine which variables as a whole have a large effect on the outcome of deposit, the dependent variable. As we can see the p-value for all variables are exceptionally low indicating that they would be good predictors of the dependent variable. The "***" column shows that many of the variables are valuable predictors of deposit. This is interesting considering the both the numerical and categorical correlation matrices did not show relationships. Overall, the accuracy score of the above logistic regression is computed at 0.8987 which suggests that the model is performing decently in the prediction of the dependent variable.
+When creating a logistic model including all independent variables, we can see that the model breaks the variables out in to their respective labels (ex: "jobblue-collar"). This makes it very difficult to determine which variables as a whole have a large effect on the outcome of deposit, the dependent variable. As we can see the p-value for all variables are exceptionally low indicating that they would be good predictors of the dependent variable. The "\*\*\*" column shows that many of the variables are valuable predictors of deposit. This is interesting considering the both the numerical and categorical correlation matrices did not show relationships. Overall, the accuracy score of the above logistic regression is computed at 0.8987 which suggests that the model is performing decently in the prediction of the dependent variable.
 
 As expected after exploratory visualizations in prior analysis, the previous outcome of prior campaigns being a success is a good indication to predicting the deposit variable. Similarly, certain job types are seen to be helpful indicators as well. Duration, campaign, and whether or not a client has a housing loan also appear to be significant predictors. With this knowledge, we move to create a second logistic regression that narrows down to these variables with the goal of experiencing a higher accuracy rate.
 
