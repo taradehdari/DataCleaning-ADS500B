@@ -59,6 +59,7 @@ summary(clientdata)
 ```
 
 #### Identifying and Treating Outliers
+
 After removal of missing values, it is necessary to determine if any outliers are present in the data that could potentially skew final results of an analysis. Multiple box plots were created to identify the outliers for the seven numerical variables. In general, removing outliers from a large data set is a common practice in data pre-processing and analysis, especially when the outliers are believed to be due to errors or measurement issues.
 
 Upon creation, it is found that six of the numerical values have outliers. The only variable proven to not have outliers present is day, which represent the last day of contact of the month. However, of the six variables with outliers, only one will have the outliers removed. The previous variable, measuring the number of contacts a client has had before the current campaign call, ranges between 0 and 58 with the exception of one record. The record with this value, 275, has been removed to smooth the distribution of the previous variable. All other variables that included outliers (age, balance, duration, campaign, and pdays) have been left untouched because the quantity of outliers is too high to remove. Removal of these outliers would significantly change the data overall.
@@ -92,6 +93,7 @@ summary(clientdata$previous)
 
 
 #### Data Aggregation
+
 Now that the data set is complete and representing significant data, we move to aggregate the different categorical variables to maintain a better understanding of the population.
 
 Below, we are visualizing the number of term deposits subscribed by the clients based on their job type. Based on the data provided, it appears that clients in management roles have subscribed to the highest number of term deposits, with a total of 1232 deposits, followed by technicians with 795 deposits and blue-collar workers with 670 deposits.
@@ -441,15 +443,16 @@ ggplot(clientdata, aes(x = duration, y = pdays)) +
   labs(title = "Scatter plot of duration and pdays", x = "Duration", y = "Pdays")
 ggplot(clientdata, aes(x = duration, y = previous)) +
   geom_point(color = "pink") +
-  labs(title = "Scatter plot of duration and pdays", x = "Previous", y = "Pdays")
+  labs(title = "Scatter plot of duration and previous", x = "Duration", y = "Previous")
 ```
 
 #### Normalizations and Visualizations
-Since the both the numerical and categorical correlation matrices did not represent strong positive or negative relationships, we are moving to visualize the dependent variable, deposit, against independent variables that we believe may have a significance. In order to properly compare the visualizations against one another, normalization was needed in the dependent variable, deposit, to hold an even weight by counts of observations. The deposit variable was normalized in all cluster bar charts by the yes or no's recorded based on the number of clients for each variable.
 
-The first independent variable to be visualized, age, was aggregated into an age range to disperse the counts. This aggregation was a necessity as the "Clients by Age Group" bar chart below shows an increased number of clients in the age group 30-39; which will have a skew on the distribution of the dependent variable.
+Since both the numerical and categorical correlation matrices did not represent strong positive or negative relationships, we are moving to visualize the dependent variable, deposit, against independent variables that we believe may have a significance. In order to properly compare the visualizations against one another, normalization was needed in the independent variables to hold an even weight by counts of observations. The independent variable was normalized in all cluster bar charts to ensure that if a group in that variable had more occurrences in the data set it wouldn't affect the results. For example, there are more ages from 30-39 so if a normalization wasn't done there would be more occurrences of 30-39 for deposits but with a normalization we can observe by ration whether a age group does more or less deposits. 
 
-```{r, warning=FALSE}
+The first independent variable to be visualized, age, was aggregated into an age range so that visually we can see the different ages. The first graph shows how there is more 30-39 year olds in our age groups so a normalization was a necessity so that the second graph wouldn't be biased. 
+
+```{r, warning=FALSE, message=FALSE, error=FALSE}
 # Group data by age group and deposit, and count number of observations
 df <- clientdata %>%
   group_by(age_group, deposit) %>%
@@ -489,7 +492,7 @@ ggplot(age_depo_count_norm, aes(x = age_group, y = count_norm, fill = deposit)) 
 
 After normalization, we can see that all age groups are subject to recording more no's than secured deposits. However, the age group 80-95 seems to record the highest value of secured deposits based on the normalized values. Since there is a wide spread between the recorded answers, it is best if age group is not included as an independent variable in the final model as most recorded a no for deposit within the range, not independent records.
 
-Similar normalization techniques of the dependent variable a clustered bar chart has been created to compare the job type to the deposit type of the client. This bar chart will show which job type has the most deposits recorded and separate these recordings out to "yes" and "no".
+Similar normalization techniques of the independent variable a clustered bar chart has been created to compare the job type to the deposit type of the client. This bar chart will show which job type has the most deposits recorded and separate these recordings out to "yes" and "no".
 
 ```{r message=FALSE}
 # Group data by  job and deposit, and count number of observations
@@ -604,6 +607,7 @@ The "Deposits by Previous Outcome" bar chart records the only variable that has 
 After visualizing the dependent variable, deposit, against independent variables that we felt would have a relationship, although small, we are going to move forward with creating an overall model to then be transitioned to better fit. The initial model below will include all independent variables from the "clientdata" data set after normalization. A supervised learning model, logistic regression, will be used to to help predict our binary, dependent variable. Supervised learning will allow us to predict the deposit outcome based on the outcomes of previous records from the "clientdata" data set.
 
 ##### Initial Logistic Regression
+
 ```{r warning=FALSE}
 #creating categorical variables into factors 
 clientdata$job <- as.factor(clientdata$job)
@@ -635,9 +639,9 @@ print(paste('accuracy', 1-predicted.results))
 
 ```
 
-When creating a logistic model including all independent variables, we can see that the model breaks the variables out in to their respective labels (ex: "jobblue-collar"). This makes it very difficult to determine which variables as a whole have a large effect on the outcome of deposit, the dependent variable. As we can see the p-value for all variables are exceptionally low indicating that they would be good predictors of the dependent variable. However, the predicted accuracy of the model is [BLANK] which may indicate that the model is already overfit with all variables included.
+When creating a logistic model including all independent variables, we can see that the model breaks the variables out in to their respective labels (ex: "jobblue-collar"). This makes it very difficult to determine which variables as a whole have a large effect on the outcome of deposit, the dependent variable. As we can see the p-value for all variables are exceptionally low indicating that they would be good predictors of the dependent variable. The "***" column shows that many of the variables are valuable predictors of deposit. This is interesting considering the both the numerical and categorical correlation matrices did not show relationships. Overall, the accuracy score of the above logistic regression is computed at 0.8987 which suggests that the model is performing decently in the prediction of the dependent variable.
 
-As expected after exploratory visualizations in prior analysis, the previous outcome of prior campaigns being a success is a good indication to predicting the deposit variable. Similarly, certain job types are seen to be helpful indicators as well. With this knowledge, we move to create a second logistic regression that narrows down to these two variables.
+As expected after exploratory visualizations in prior analysis, the previous outcome of prior campaigns being a success is a good indication to predicting the deposit variable. Similarly, certain job types are seen to be helpful indicators as well. Duration, campaign, and whether or not a client has a housing loan also appear to be significant predictors. With this knowledge, we move to create a second logistic regression that narrows down to these variables with the goal of experiencing a higher accuracy rate.
 
 ##### Final Logistic Model
 
@@ -670,6 +674,8 @@ print(paste('accuracy', accuracy))
 print(confusion_matrix$byClass)
 ```
 
-Once again, we are seeing a low accuracy prediction indicating that this model is not a great fit for the prediction of deposit. The accuracy prediction of the above logistic regression is calculated at .00446. As we have learned throughout the exploratory analysis and visualizations, this low accuracy prediction (despite very low p-values for each variable) is likely because there is not an independent variable that has a linear relationship with the dependent variable.
+Once narrowed down to significant independent variables, the accuracy of the prediction increases to 0.8989. This is a strong accuracy value that represents a well-performing model. In looking at each variable's individual performance in the model, the only characteristics that are not considered statistically significant are specific job types i.e. management, self-employed, unemployed, and unknown.
 
-Overall, the Portuguese Bank is going to struggle to predict whether a client will or will not make a deposit based on the independent variables provided. To further improve the model, the bank may benefit from more numerical values that can provide more historical financial information on the clients being sought after. The independent variables that the bank is currently analyzing are not providing sufficient enough correlations to the desired variable to make trustworthy predictions.
+Again, it is interesting to see that the above independent variables will have a statistical significance in predicting the client's deposit behavior after not visually seeing a relationship with the deposit variable. However, the Positive Predictive Value seen in the logistic model, 0.9078, can provide the Portuguese bank with confidence when a client's deposit behavior is a predicted yes. Similarly, a high precision value offers confidence that the proportion of predicted positives, or predicted "yes" cases, are all actual positives, or yes recordings.
+
+Upon request of further analysis, it may be beneficial for the Portuguese bank to begin analyzing more historical, financial information of their current clients. As expected, independent variables that are the recordings of a previous campaign (poutcome, campaign, and duration) have the lowest p-values among the variables. This further supports that current clients of the Portuguese bank are likely to continue to maintain deposits with the company.
